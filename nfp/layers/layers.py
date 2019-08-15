@@ -1,6 +1,7 @@
 from nfp.layers.wrappers import LSTMStep
 
 from keras.engine import Layer
+from keras.layers import Embedding
 
 from keras import activations
 from keras import initializers
@@ -326,6 +327,26 @@ class Embedding2D(Layer):
         }
         base_config = super(Embedding2D, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
+
+class Embedding2DCompressed(Embedding):
+    """2D embedding where we generate a 2D matrix by squaring smaller matrices
+
+    Takes a embedding of shape (d, 1) and computes x * x^T"""
+
+    def call(self, inputs):
+        e = super().call(inputs)
+
+        # Turn from (N, e) to (N, e, 1) and (N, 1, e)
+        e1 = K.expand_dims(e, -1)
+        e2 = K.expand_dims(e, -2)
+
+        # Compute a matrix multiplication to make (N, e, e)
+        return K.batch_dot(e1, e2)
+
+    def compute_output_shape(self, input_shape):
+        os = super().compute_output_shape(input_shape)
+        return os + (os[-1],)  # From (..., e), (..., e, e)
 
 
 class EdgeNetwork(Layer):

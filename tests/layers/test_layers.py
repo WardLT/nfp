@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from keras.engine import Layer
+from nfp import Embedding2DCompressed
 from numpy.testing import assert_allclose
 from keras import layers
 from keras import models
@@ -171,3 +172,12 @@ def test_set2set():
     out = model.predict_on_batch([x1, x2])
 
     assert out.shape == (2, 10)
+
+
+def test_compressed_2d_embedding():
+    bond = layers.Input(name='bond', shape=(1,), dtype='int32')
+    sbond = Squeeze()(bond)
+
+    embedding = Embedding2DCompressed(3, 5)
+    o = embedding(sbond)
+    assert o._keras_shape == (None, 5, 5)
