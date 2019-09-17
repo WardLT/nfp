@@ -268,11 +268,26 @@ class Squeeze(Layer):
     easier to work with a vector of shape (num_atoms_in_batch,)
     """
 
+    def __init__(self, axis=1, **kwargs):
+        """
+        Args:
+            axis (int): Which axis to drop
+        """
+        super().__init__(**kwargs)
+        self.axis = axis
+
     def call(self, inputs):
-        return K.squeeze(inputs, 1)
+        return K.squeeze(inputs, self.axis)
+
+    def get_config(self):
+        cfg = super().get_config()
+        cfg['axis'] = self.axis
+        return cfg
 
     def compute_output_shape(self, input_shape):
-        return input_shape[:-1]
+        output_shape = list(input_shape)
+        output_shape.pop(self.axis)
+        return tuple(output_shape)
 
 
 class Embedding2D(Layer):
